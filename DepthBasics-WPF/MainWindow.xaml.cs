@@ -10,6 +10,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
     using System.Globalization;
     using System.IO;
     using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using Microsoft.Kinect;
@@ -28,6 +29,11 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         /// Here is the index we will create a single fish at
         /// </summary>
         private int fishIndex = -1;
+
+        /// <summary>
+        /// Simple test to check if the single fish has already been created
+        /// </summary>
+        bool fishCreated = false;
 
         /// <summary>
         /// Active Kinect sensor
@@ -203,31 +209,33 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
                     depthFrame.CopyDepthImagePixelDataTo(this.prevDepthPixels);
 
-                    if (fishIndex != -1)
+                    if (!fishCreated)
                     {
-                        Console.WriteLine("Hey, we're gonna make a fish at index " + fishIndex);
-
-   /* 
-        this.sensor.CoordinateMapper.MapDepthFrameToColorFrame(
-            DepthFormat,
-            this.depthPixels,
-            ColorImageFormat.RgbResolution1280x960Fps12,
-            this.colorCoordinates);
-
-        // ...
-
-        int depthIndex = x + (y * this.sensor.DepthStream.FrameWidth);
-        DepthImagePixel depthPixel = this.depthPixels[depthIndex];
-
-        // scale color coordinates to depth resolution
-        int X = colorImagePoint.X / this.colorToDepthDivisor;
-        int Y = colorImagePoint.Y / this.colorToDepthDivisor;
-
-        // depthPixel is the depth for the (X,Y) pixel in the color frame 
-    */
+                        createFish();
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// TODO
+        /// Creates a fish at fishIndex provided the fishInde is not -1
+        /// </summary>
+        private void createFish()
+        {
+            if (fishIndex == -1)
+            {
+                return;
+            }
+
+            Console.WriteLine("Hey, we're gonna make a fish at index " + fishIndex);
+            BitmapImage img = new BitmapImage(new Uri(@"C:\Users\Michael\Source\Repos\eecs481maze\KinectColorApp\Resources\turtle.png", UriKind.Absolute));
+            img.BeginInit();
+            Image fish = new Image();
+            fish.Source = img;
+            // Console.WriteLine(fish.IsVisible);
+
+            fishCreated = true;
         }
 
         /// <summary>
