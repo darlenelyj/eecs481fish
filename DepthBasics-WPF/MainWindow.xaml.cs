@@ -20,14 +20,32 @@ namespace Microsoft.Samples.Kinect.DepthBasics
     public partial class MainWindow : Window
     {
         /// <summary>
+        /// Lower threshold implies more sensitivity
+        /// </summary>
+        private const int DEPTH_CHANGE_THRESHOLD = 1400;
+
+        /// <summary>
+        /// Here is the index we will create a single fish at
+        /// </summary>
+        private int fishIndex = -1;
+
+        /// <summary>
         /// Active Kinect sensor
         /// </summary>
         private KinectSensor sensor;
+
+        // Format we will use for the depth stream
+        private const DepthImageFormat DepthFormat = DepthImageFormat.Resolution320x240Fps30;
 
         /// <summary>
         /// Bitmap that will hold color information
         /// </summary>
         private WriteableBitmap colorBitmap;
+
+        /// <summary>
+        /// Stores the previous DepthImagePixel array of depthPixels
+        /// </summary>
+        private DepthImagePixel[] prevDepthPixels;
 
         /// <summary>
         /// Intermediate storage for the depth data received from the camera
@@ -74,6 +92,9 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                 
                 // Allocate space to put the depth pixels we'll receive
                 this.depthPixels = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
+
+                // Allocate space to put the previous depth pixels we'll receive
+                this.prevDepthPixels = new DepthImagePixel[this.sensor.DepthStream.FramePixelDataLength];
 
                 // Allocate space to put the color pixels we'll create
                 this.colorPixels = new byte[this.sensor.DepthStream.FramePixelDataLength * sizeof(int)];
@@ -141,6 +162,12 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                     {
                         // Get the depth for this pixel
                         short depth = depthPixels[i].Depth;
+                        short prevDepth = prevDepthPixels[i].Depth;
+
+                        if (prevDepth > 0 && this.fishIndex == -1 && depth - prevDepth > DEPTH_CHANGE_THRESHOLD)
+                        {
+                            fishIndex = i;
+                        }
 
                         // To convert to a byte, we're discarding the most-significant
                         // rather than least-significant bits.
@@ -173,6 +200,32 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                         this.colorPixels,
                         this.colorBitmap.PixelWidth * sizeof(int),
                         0);
+
+                    depthFrame.CopyDepthImagePixelDataTo(this.prevDepthPixels);
+
+                    if (fishIndex != -1)
+                    {
+                        Console.WriteLine("Hey, we're gonna make a fish at index " + fishIndex);
+
+   /* 
+        this.sensor.CoordinateMapper.MapDepthFrameToColorFrame(
+            DepthFormat,
+            this.depthPixels,
+            ColorImageFormat.RgbResolution1280x960Fps12,
+            this.colorCoordinates);
+
+        // ...
+
+        int depthIndex = x + (y * this.sensor.DepthStream.FrameWidth);
+        DepthImagePixel depthPixel = this.depthPixels[depthIndex];
+
+        // scale color coordinates to depth resolution
+        int X = colorImagePoint.X / this.colorToDepthDivisor;
+        int Y = colorImagePoint.Y / this.colorToDepthDivisor;
+
+        // depthPixel is the depth for the (X,Y) pixel in the color frame 
+    */
+                    }
                 }
             }
         }
